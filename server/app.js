@@ -4,7 +4,16 @@ const bcrypt = require('bcrypt');
 const app = express()
 const dbManager = require('./db');
 const uuidv4 = require('uuid/v4')
+const amiiboKey = require('./amiibo/key');
 const db = dbManager.load();
+
+const keys = amiiboKey.load('./keys.bin');
+
+if (keys == null) {
+    console.error('Failed to load keys.bin');
+} else {
+    console.log(keys);
+}
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))

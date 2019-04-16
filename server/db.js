@@ -7,8 +7,6 @@
     }
 
     class Database {
-        db;
-        
         constructor() {
             this.db = {
                 users: {},
