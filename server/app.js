@@ -66,7 +66,11 @@ app.post('/api/bins', async (req, res) => {
         return;
     }
 
-    
+    let raw = req.body.raw;
+    let bin = {
+        raw
+    };
+    db.addBin(session.login, bin);
 });
 
 app.listen(3000, function () {

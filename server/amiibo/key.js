@@ -1,3 +1,5 @@
+const { MasterKeys } = require("./MasterKeys");
+
 const fs = require('fs');
 
 exports.load = function(file) {
@@ -15,14 +17,7 @@ exports.load = function(file) {
             return null;
         }
     
-    return new MasterKey(keys.data, keys.tag);
-}
-
-class MasterKey {
-    constructor(data, tag) {
-        this.data = data;
-        this.tag = tag;
-    }
+    return new MasterKeys(keys.data, keys.tag);
 }
 
 /**
