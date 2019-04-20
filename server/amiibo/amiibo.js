@@ -1,6 +1,7 @@
 const { MasterKeys, DerivedKeys } = require("./MasterKeys");
 const crypto = require('crypto');
-
+const HMAC_POS_DATA = 0x008
+const HMAC_POS_TAG = 0x1B4
 exports.unpack = unpack;
 
 /**
@@ -22,12 +23,32 @@ function unpack(amiiboKeys, tag) {
     amiiboKeygen(amiiboKeys.data, internal, dataKeys);
     amiiboKeygen(amiiboKeys.tag, internal, tagKeys);
 
+    // Decrypt
+    amiiboCipher(dataKeys, internal, unpacked);
+
+	// Regenerate tag HMAC. Note: order matters, data HMAC depends on tag HMAC!
+    computeHmac(tagKeys.hmacKey, unpacked, 0x1D4, 0x34, unpacked, HMAC_POS_TAG);
+
+	// Regenerate data HMAC
+    computeHmac(dataKeys.hmacKey, unpacked, 0x029, 0x1DF, unpacked, HMAC_POS_DATA);
+
+    result = memcmp(unpacked, HMAC_POS_DATA, internal, HMAC_POS_DATA, 32) == 0 &&
+        memcmp(unpacked, HMAC_POS_TAG, internal, HMAC_POS_TAG, 32) == 0;
+
     return {
         unpacked,
         result
     }
 }
 
+function memcmp(s1, s1Offset, s2, s2Offset, size) {
+    for (let i = 0; i < size; i++) {
+        if (s1[s1Offset + i] !== s2[s2Offset + i]) {
+            return s1[s1Offset + i] - s2[s2Offset + i];
+        }
+    }
+    return 0;
+}
 
 function memcpy(destination, destinationOffset, source, sourceOffset, length) {
     for (let i = 0; i < length; i++) {
@@ -111,7 +132,7 @@ function keygenPrepareSeed(baseKey, baseSeed, output) {
 
     // 5: Xor last bytes 0x20-0x3F of input seed with AES XOR pad and append them
     for (let i = 0; i < 32; i++) {
-        output[outputOffset + i] = baseSeed[i + 32] ^ baseKeys.xorPad[i];
+        output[outputOffset + i] = baseSeed[i + 32] ^ baseKey.xorPad[i];
     }
     outputOffset += 32;
 
@@ -158,4 +179,28 @@ function initHmac(hmacKey, iteration, seed) {
 function drbgStep(hmac, output, outputOffset) {
     let buf = hmac.digest('binary');
     memcpy(output, outputOffset, buf, 0, buf.length);
+}
+
+/**
+ * 
+ * @param {DerivedKeys} keys 
+ * @param {any[]} input 
+ * @param {any[]} output 
+ */
+function amiiboCipher(keys, input, output) {
+    console.log(keys.aesKey, keys.aesIV)
+    let cipher = crypto.createCipheriv('aes-128-ctr', new Uint8Array(keys.aesKey), new Uint8Array(keys.aesIV));
+    for (let val of cipher.update(new Uint8Array(input))) {
+        output.push(val);
+    }
+
+    memcpy(output, 0, input, 0, 0x008);
+    memcpy(output, 0x028, input, 0x028, 0x004);
+    memcpy(output, 0x1D4, input, 0x1D4, 0x034);
+}
+
+function computeHmac(hmacKey, input, inputOffset, inputLength, output, outputOffset) {
+    let hmac = crypto.createHmac('sha256', new Uint8Array(hmacKey));
+    let result = hmac.update(new Uint8Array(input).subarray(inputOffset, inputLength)).digest();
+    memcpy(output, outputOffset, result, 0, result.length);
 }

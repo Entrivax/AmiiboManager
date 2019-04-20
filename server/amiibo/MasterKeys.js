@@ -11,6 +11,22 @@ class DerivedKeys {
         this.aesKey = [];
         this.aesIV = [];
         this.hmacKey = [];
+        return new Proxy(this, this);
+    }
+
+    get(target, prop) {
+        if (prop === 'aesKey') {
+            return target.aesKey;
+        } else if (prop === 'aesIV') {
+            return target.aesIV;
+        } else if (prop === 'hmacKey') {
+            return target.hmacKey;
+        }
+        return target.getByte(prop);
+    }
+
+    set(target, prop, value) {
+        target.setByte(+prop, value);
     }
 
     getByte(i) {

@@ -5,6 +5,7 @@ const app = express()
 const dbManager = require('./db');
 const uuidv4 = require('uuid/v4')
 const amiiboKey = require('./amiibo/key');
+const amiibo = require('./amiibo/amiibo');
 const db = dbManager.load();
 
 const keys = amiiboKey.load('./keys.bin');
@@ -67,11 +68,28 @@ app.post('/api/bins', async (req, res) => {
     }
 
     let raw = req.body.raw;
+    try {
+        let result = amiibo.unpack(keys, raw);
+        res.json(result);
+    } catch (exception) {
+        console.error(exception);
+    }
+    
     let bin = {
         raw
     };
     db.addBin(session.login, bin);
 });
+
+app.post('/api/unpack', (req, res) => {
+    let raw = req.body.raw;
+    try {
+        let result = amiibo.unpack(keys, raw);
+        res.json(result);
+    } catch (exception) {
+        console.error(exception);
+    }
+})
 
 app.listen(3000, function () {
     console.log('App listening on port 3000!')
