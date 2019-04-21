@@ -21,6 +21,8 @@ class DerivedKeys {
             return target.aesIV;
         } else if (prop === 'hmacKey') {
             return target.hmacKey;
+        } else if (prop === 'getUnified') {
+            return target.getUnified;
         }
         return target.getByte(prop);
     }
@@ -50,6 +52,10 @@ class DerivedKeys {
             this.hmacKey[i - 32] = val;
             return;
         }
+    }
+
+    getUnified() {
+        return this.aesKey.concat(this.aesIV, this.hmacKey);
     }
 }
 exports.DerivedKeys = DerivedKeys;

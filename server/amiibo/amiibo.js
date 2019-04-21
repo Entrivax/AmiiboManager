@@ -10,9 +10,9 @@ exports.unpack = unpack;
  * @param {*} tag 
  */
 function unpack(amiiboKeys, tag) {
-    let unpacked = [];
+    let unpacked = new Array(520).fill(0);
     let result = false;
-    let internal = [];
+    let internal = new Array(520).fill(0);
     let dataKeys = new DerivedKeys();
     let tagKeys = new DerivedKeys();
 
@@ -26,10 +26,10 @@ function unpack(amiiboKeys, tag) {
     // Decrypt
     amiiboCipher(dataKeys, internal, unpacked);
 
-	// Regenerate tag HMAC. Note: order matters, data HMAC depends on tag HMAC!
+    // Regenerate tag HMAC. Note: order matters, data HMAC depends on tag HMAC!
     computeHmac(tagKeys.hmacKey, unpacked, 0x1D4, 0x34, unpacked, HMAC_POS_TAG);
 
-	// Regenerate data HMAC
+    // Regenerate data HMAC
     computeHmac(dataKeys.hmacKey, unpacked, 0x029, 0x1DF, unpacked, HMAC_POS_DATA);
 
     result = memcmp(unpacked, HMAC_POS_DATA, internal, HMAC_POS_DATA, 32) == 0 &&
@@ -37,7 +37,7 @@ function unpack(amiiboKeys, tag) {
 
     return {
         unpacked,
-        result
+        result,
     }
 }
 
@@ -74,6 +74,8 @@ function memset(destination, destinationOffset, data, length) {
 
 function amiiboKeygen(masterKey, internalDump, derivedKeys) {
     let seed = [];
+
+    // Bug here
 
     amiiboCalcSeed(internalDump, seed);
     keygen(masterKey, seed, derivedKeys);
@@ -115,7 +117,7 @@ function keygen(baseKey, baseSeed, derivedKeys) {
 
 function keygenPrepareSeed(baseKey, baseSeed, output) {
     // 1: Copy whole type string
-    let outputOffset = memccpy(output, 0, baseKey.typeString, 0, 14);
+    let outputOffset = memccpy(output, 0, baseKey.typeString, 0, 0, 14);
 
     // 2: Append (16 - magicBytesSize) from the input seed
     let leadingSeedBytes = 16 - baseKey.magicBytesSize;
@@ -151,15 +153,15 @@ function drbgGenerateBytes(hmacKey, seed, output) {
     let outputOffset = 0;
     let temp = [];
 
-    let iteration = 0;
+    let iterationCtx = { iteration: 0 };
     while (outputSize > 0) {
         if (outputSize < DRBG_OUTPUT_SIZE) {
-            drbgStep(initHmac(hmacKey, iteration, seed), temp, 0);
+            drbgStep(initHmac(hmacKey, iterationCtx.iteration, seed), temp, 0, iterationCtx);
             memcpy(output, outputOffset, temp, 0, outputSize);
             break;
         }
 
-        drbgStep(initHmac(hmacKey, iteration, seed), output, outputOffset);
+        drbgStep(initHmac(hmacKey, iterationCtx.iteration, seed), output, outputOffset, iterationCtx);
         outputOffset += DRBG_OUTPUT_SIZE;
         outputSize -= DRBG_OUTPUT_SIZE;
     }
@@ -176,9 +178,10 @@ function initHmac(hmacKey, iteration, seed) {
  * @param {*} output 
  * @param {*} outputOffset 
  */
-function drbgStep(hmac, output, outputOffset) {
+function drbgStep(hmac, output, outputOffset, iterationCtx) {
+    iterationCtx.iteration++;
     let buf = hmac.digest('binary');
-    memcpy(output, outputOffset, buf, 0, buf.length);
+    memcpy(output, outputOffset, Array.from(buf).map((a) => '' + a.charCodeAt(0)), 0, buf.length);
 }
 
 /**
@@ -188,12 +191,14 @@ function drbgStep(hmac, output, outputOffset) {
  * @param {any[]} output 
  */
 function amiiboCipher(keys, input, output) {
-    console.log(keys.aesKey, keys.aesIV)
-    let cipher = crypto.createCipheriv('aes-128-ctr', new Uint8Array(keys.aesKey), new Uint8Array(keys.aesIV));
-    for (let val of cipher.update(new Uint8Array(input))) {
-        output.push(val);
+    let cipher = crypto.createDecipheriv('aes-128-ctr', new Uint8Array(keys.aesKey), new Uint8Array(keys.aesIV));
+    let buf = cipher.update(new Uint8Array(input).subarray(0x02C));
+
+    for (let i = 0; i < buf.length; i++) {
+        output[0x02C + i] = buf[i];
     }
 
+    console.log(output.map((a) => '' + a).join(','));
     memcpy(output, 0, input, 0, 0x008);
     memcpy(output, 0x028, input, 0x028, 0x004);
     memcpy(output, 0x1D4, input, 0x1D4, 0x034);

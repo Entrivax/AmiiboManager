@@ -13,7 +13,7 @@ const keys = amiiboKey.load('./keys.bin');
 if (keys == null) {
     console.error('Failed to load keys.bin');
 } else {
-    console.log(keys);
+    //console.log(keys);
 }
 
 // parse application/x-www-form-urlencoded
