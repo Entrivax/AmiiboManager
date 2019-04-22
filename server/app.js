@@ -1,11 +1,12 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const app = express()
 const dbManager = require('./db');
 const uuidv4 = require('uuid/v4')
 const amiiboKey = require('./amiibo/key');
 const amiibo = require('./amiibo/amiibo');
+const amiiboUtils = require('./amiibo/utils');
 const db = dbManager.load();
 
 const keys = amiiboKey.load('./keys.bin');
@@ -16,19 +17,21 @@ if (keys == null) {
     //console.log(keys);
 }
 
+amiiboUtils.loadDatabase('./AmiiboAPI/database/amiibo.json');
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 
 // parse application/json
 app.use(bodyParser.json())
 
-app.get('/api/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
     let user = db.getUser(req.body.login);
     if (user == null) {
         res.json(null);
         return;
     }
-    let result = await bcrypt.compare(req.password, user.password);
+    let result = await bcrypt.compare(req.body.password, user.password);
     if (!result) {
         res.json(null);
         return;
@@ -68,28 +71,51 @@ app.post('/api/bins', async (req, res) => {
     }
 
     let raw = req.body.raw;
+    let result = undefined;
     try {
-        let result = amiibo.unpack(keys, raw);
-        res.json(result);
+        let tmp = amiibo.unpack(keys, raw);
+        if (tmp.result) {
+            result = tmp.unpacked;
+        }
     } catch (exception) {
         console.error(exception);
     }
     
-    let bin = {
-        raw
-    };
-    db.addBin(session.login, bin);
-});
-
-app.post('/api/unpack', (req, res) => {
-    let raw = req.body.raw;
-    try {
-        let result = amiibo.unpack(keys, raw);
-        res.json(result);
-    } catch (exception) {
-        console.error(exception);
+    if (result === undefined) {
+        res.json({ result: false });
+        return;
     }
-})
+
+    let characterId = amiiboUtils.getCharacterId(result);
+    let characterName = amiiboUtils.getCharacterName(characterId);
+    let gameSeriesId = amiiboUtils.getGameSeriesId(result);
+    let gameSeriesName = amiiboUtils.getGameSeriesName(gameSeriesId);
+    let amiiboId = amiiboUtils.getAmiiboId(result);
+    let amiiboName = amiiboUtils.getAmiiboName(amiiboId);
+    let name = amiiboUtils.getNickName(result);
+
+    let bin = {
+        raw,
+        characterId,
+        characterName,
+        gameSeriesId,
+        gameSeriesName,
+        amiiboId,
+        amiiboName,
+        name,
+    };
+    res.json(bin);
+    db.addBin(session.login, bin);
+    console.log('Added', {
+        characterId,
+        characterName,
+        gameSeriesId,
+        gameSeriesName,
+        amiiboId,
+        amiiboName,
+        name,
+    })
+});
 
 app.listen(3000, function () {
     console.log('App listening on port 3000!')

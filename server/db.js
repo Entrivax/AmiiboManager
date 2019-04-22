@@ -1,6 +1,6 @@
 (function() {
     const saltRounds = 10;
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
     const uuidv4 = require('uuid/v4')
     exports.load = function() {
         return new Database()
@@ -31,6 +31,13 @@
         }
 
         getSession(sessionId) {
+            let currentDate = new Date().getTime() - 1000 * 60 * 60 * 5;
+            for (let sessionId in this.db.sessions) {
+                let sessionDate = this.db.sessions[sessionId].date.getTime();
+                if (sessionDate < currentDate) {
+                    delete this.db.sessions[sessionId];
+                }
+            }
             return this.db.sessions[sessionId];
         }
 
@@ -54,7 +61,11 @@
                 owner: amiiboData.owner,
                 name: amiiboData.name,
                 characterId: amiiboData.characterId,
+                characterName: amiiboData.characterName,
                 gameSeriesId: amiiboData.gameSeriesId,
+                gameSeriesName: amiiboData.gameSeriesName,
+                amiiboId: amiiboData.amiiboId,
+                amiiboName: amiiboData.amiiboName,
                 id: uuidv4(),
             }
             this.db.bins[login] = this.db.bins[login] || [];
