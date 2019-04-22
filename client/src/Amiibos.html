@@ -1,0 +1,26 @@
+<template>
+    <section class="au-animate">
+        <h2>Amiibos</h2>
+        <div>
+            <div class="input-group">
+                <div class="custom-file">
+                    <input files.bind="inputAmiiboFile" type="file" class="custom-file-input" id="inputAmiiboFile" aria-describedby="inputAmiiboFileButton">
+                    <label class="custom-file-label" for="inputAmiiboFile">Choose file</label>
+                </div>
+                <div class="input-group-append">
+                    <button click.delegate="uploadAmiibo()" class="btn btn-outline-secondary" type="button" id="inputAmiiboFileButton">Upload</button>
+                </div>
+            </div>
+        </div>
+        <div repeat.for="amiibo of amiibos">
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                  <h5 class="card-title">${amiibo.name}</h5>
+                  <p class="card-text">${amiibo.amiiboName}</p>
+                  <a class="card-link" click.delegate="downloadAmiibo(amiibo)">Download</a>
+                  <a class="card-link text-danger" click.delegate="deleteAmiibo(amiibo)">Delete</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</template>

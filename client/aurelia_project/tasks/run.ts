@@ -16,12 +16,17 @@ function runWebpack(done) {
     hot: project.platform.hmr || CLIOptions.hasFlag('hmr'),
     port: CLIOptions.getFlagValue('port') || project.platform.port,
     contentBase: config.output.path,
-    historyApiFallback: true,
+    //historyApiFallback: true,
+    historyApiFallback: false,
     open: project.platform.open || CLIOptions.hasFlag('open'),
     stats: {
       colors: require('supports-color')
     },
-    https: config.devServer.https
+    https: config.devServer.https,
+    proxy: {
+        '/api': 'http://localhost:3000',
+        changeOrigin: true
+    }
   } as any;
 
   // Add the webpack-dev-server client to the webpack entry point

@@ -1,11 +1,22 @@
+import { SessionService } from 'services/SessionService';
+import { HttpClient } from 'aurelia-fetch-client';
 import { PLATFORM } from 'aurelia-pal';
 import { Router, RouterConfiguration } from 'aurelia-router';
+import { SessionInterceptor } from 'http/SessionInterceptor';
+import { autoinject } from 'aurelia-framework';
 
+@autoinject()
 export class App {
     public router: Router;
 
+    constructor(httpClient: HttpClient, sessionService: SessionService) {
+        httpClient.configure(config => {
+            config.withInterceptor(new SessionInterceptor(sessionService));
+        });
+    }
+
     public configureRouter(config: RouterConfiguration, router: Router) {
-        config.title = 'Aurelia';
+        config.title = 'AmiiboManager';
         config.map([
             {
                 route: ['', 'login'],
@@ -13,6 +24,19 @@ export class App {
                 moduleId: PLATFORM.moduleName('./Login'),
                 nav: true,
                 title: 'Login'
+            },
+            {
+                route: ['register'],
+                name: 'register',
+                moduleId: PLATFORM.moduleName('./Register'),
+                nav: true,
+                title: 'Register'
+            },
+            {
+                route: 'amiibos',
+                name: 'amiibos',
+                moduleId: PLATFORM.moduleName('./Amiibos'),
+                title: 'Amiibos'
             },
         ]);
 
