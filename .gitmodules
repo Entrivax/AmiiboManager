@@ -1,0 +1,3 @@
+[submodule "AmiiboAPI"]
+	path = server/AmiiboAPI
+	url = https://github.com/N3evin/AmiiboAPI
