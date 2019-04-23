@@ -1,5 +1,6 @@
 import { AmiiboService } from './services/AmiiboService';
 import { autoinject } from "aurelia-framework";
+import { saveAs } from 'file-saver';
 
 @autoinject()
 export class Amiibos {
@@ -32,5 +33,19 @@ export class Amiibos {
             }
             reader.readAsArrayBuffer(file);
         }
+    }
+
+    downloadAmiibo(amiibo: any) {
+        this.amiiboService.getAmiibo(amiibo.id)
+            .then(response => response.json())
+            .then(amiibo => {
+                let blob = new Blob([new Uint8Array(amiibo.raw)], { type: "octet/stream" })
+                saveAs(blob, [amiibo.characterName, amiibo.name].join(' - ') + '.bin', true);
+            })
+    }
+
+    deleteAmiibo(amiibo: any) {
+        this.amiiboService.deleteAmiibo(amiibo.id)
+            .then(() => this.load());
     }
 }

@@ -1,7 +1,7 @@
 <template>
-    <section class="au-animate">
+    <section class="au-animate mt-4">
         <h2>Amiibos</h2>
-        <div>
+        <div class="mt-4">
             <div class="input-group">
                 <div class="custom-file">
                     <input files.bind="inputAmiiboFile" type="file" class="custom-file-input" id="inputAmiiboFile" aria-describedby="inputAmiiboFileButton">
@@ -12,13 +12,15 @@
                 </div>
             </div>
         </div>
-        <div repeat.for="amiibo of amiibos">
-            <div class="card" style="width: 18rem;">
-                <div class="card-body">
-                  <h5 class="card-title">${amiibo.name}</h5>
-                  <p class="card-text">${amiibo.amiiboName}</p>
-                  <a class="card-link" click.delegate="downloadAmiibo(amiibo)">Download</a>
-                  <a class="card-link text-danger" click.delegate="deleteAmiibo(amiibo)">Delete</a>
+        <div class="row">
+            <div repeat.for="amiibo of amiibos" class="pt-4 col-sm-6 col-lg-4">
+                <div class="card">
+                    <div class="card-body">
+                      <h5 class="card-title">${amiibo.name}</h5>
+                      <p class="card-text">${amiibo.amiiboName}</p>
+                      <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="downloadAmiibo(amiibo)">Download</button>
+                      <button type="button" class="btn btn-outline-danger btn-sm" click.delegate="deleteAmiibo(amiibo)">Delete</button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -63,6 +63,26 @@ app.get('/api/bins', (req, res) => {
     res.json(db.getBins(session.login));
 });
 
+app.get('/api/bins/:id', (req, res) => {
+    let session = db.getSession(req.headers.authorization);
+    if (!session) {
+        res.json(null);
+        return;
+    }
+
+    res.json(db.getBin(session.login, req.params.id));
+});
+
+app.delete('/api/bins/:id', (req, res) => {
+    let session = db.getSession(req.headers.authorization);
+    if (!session) {
+        res.json(null);
+        return;
+    }
+
+    res.json(db.deleteBin(session.login, req.params.id));
+});
+
 app.post('/api/bins', async (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
@@ -116,6 +136,8 @@ app.post('/api/bins', async (req, res) => {
         name,
     })
 });
+
+app.use('/', express.static('../client/dist'));
 
 app.listen(3000, function () {
     console.log('App listening on port 3000!')

@@ -51,7 +51,33 @@
         }
 
         getBins(login) {
-            return this.db.bins[login] || [];
+            return (this.db.bins[login] || []).map(bin => { return {
+                uid: bin.uid,
+                owner: bin.owner,
+                name: bin.name,
+                characterId: bin.characterId,
+                characterName: bin.characterName,
+                gameSeriesId: bin.gameSeriesId,
+                gameSeriesName: bin.gameSeriesName,
+                amiiboId: bin.amiiboId,
+                amiiboName: bin.amiiboName,
+                id: bin.id,
+            }}) || [];
+        }
+
+        getBin(login, id) {
+            return Object.assign({}, this.db.bins[login].find(bin => bin.id === id));
+        }
+
+        deleteBin(login, id) {
+            let originalBin = this.db.bins[login].find(bin => bin.id === id)
+            if(originalBin) {
+                let bin = Object.assign({}, originalBin);
+                let index = this.db.bins[login].indexOf(originalBin);
+                this.db.bins[login].splice(index, 1);
+                return bin;
+            }
+            return null;
         }
 
         addBin(login, amiiboData) {

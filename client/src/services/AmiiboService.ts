@@ -11,6 +11,18 @@ export class AmiiboService {
         });
     }
 
+    getAmiibo(id: string): Promise<Response> {
+        return this.httpClient.fetch('./api/bins/' + encodeURIComponent(id), {
+            method: 'get'
+        });
+    }
+
+    deleteAmiibo(id: string): Promise<Response> {
+        return this.httpClient.fetch('./api/bins/' + encodeURIComponent(id), {
+            method: 'delete'
+        });
+    }
+
     postAmiibo(data: number[]): Promise<Response> {
         return this.httpClient.fetch('./api/bins', {
             method: 'post',
