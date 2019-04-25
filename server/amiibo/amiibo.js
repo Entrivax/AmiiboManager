@@ -2,7 +2,9 @@ const { MasterKeys, DerivedKeys } = require("./MasterKeys");
 const crypto = require('crypto');
 const HMAC_POS_DATA = 0x008
 const HMAC_POS_TAG = 0x1B4
+const NFC3D_AMIIBO_SIZE = 540;
 exports.unpack = unpack;
+exports.pack = pack;
 
 /**
  * 
@@ -10,9 +12,9 @@ exports.unpack = unpack;
  * @param {*} tag 
  */
 function unpack(amiiboKeys, tag) {
-    let unpacked = new Array(520).fill(0);
+    let unpacked = new Array(NFC3D_AMIIBO_SIZE).fill(0);
     let result = false;
-    let internal = new Array(520).fill(0);
+    let internal = new Array(NFC3D_AMIIBO_SIZE).fill(0);
     let dataKeys = new DerivedKeys();
     let tagKeys = new DerivedKeys();
 
@@ -32,6 +34,8 @@ function unpack(amiiboKeys, tag) {
     // Regenerate data HMAC
     computeHmac(dataKeys.hmacKey, unpacked, 0x029, 0x1DF, unpacked, HMAC_POS_DATA);
 
+    memcpy(unpacked, 0x208, tag, 0x208, 0x14);
+
     result = memcmp(unpacked, HMAC_POS_DATA, internal, HMAC_POS_DATA, 32) == 0 &&
         memcmp(unpacked, HMAC_POS_TAG, internal, HMAC_POS_TAG, 32) == 0;
 
@@ -39,6 +43,37 @@ function unpack(amiiboKeys, tag) {
         unpacked,
         result,
     }
+}
+
+function pack(amiiboKeys, plain) {
+    let packed = new Array(NFC3D_AMIIBO_SIZE).fill(0);
+    let cipher = new Array(NFC3D_AMIIBO_SIZE).fill(0);
+    let dataKeys = new DerivedKeys();
+    let tagKeys = new DerivedKeys();
+
+    // Generate keys
+    amiiboKeygen(amiiboKeys.tag, plain, tagKeys);
+    amiiboKeygen(amiiboKeys.data, plain, dataKeys);
+
+    // Generated tag HMAC
+    computeHmac(tagKeys.hmacKey, plain, 0x1D4, 0x34, cipher, HMAC_POS_TAG);
+
+    // Generate data HMAC
+    let hmacBuffer = [].concat(
+        plain.slice(0x029, 0x029 + 0x18B),
+        cipher.slice(HMAC_POS_TAG, HMAC_POS_TAG + 0x20),
+        plain.slice(0x1D4, 0x1D4 + 0x34));
+    computeHmac(dataKeys.hmacKey, hmacBuffer, 0, hmacBuffer.length, cipher, HMAC_POS_DATA);
+
+    // Encrypt
+    amiiboCipher(dataKeys, plain, cipher);
+
+    // Convert back to hardware
+    internalToTag(cipher, packed);
+
+    memcpy(packed, 0x208, plain, 0x208, 0x14);
+
+    return packed;
 }
 
 function memcmp(s1, s1Offset, s2, s2Offset, size) {
