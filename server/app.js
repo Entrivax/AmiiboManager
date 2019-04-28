@@ -1,15 +1,15 @@
+const fs = require('fs');
 const express = require('express')
 const bodyParser = require('body-parser')
 const bcrypt = require('bcryptjs');
 const app = express()
 const dbManager = require('./db');
 const uuidv4 = require('uuid/v4')
-const amiiboKey = require('./amiibo/key');
-const amiibo = require('./amiibo/amiibo');
+const maboii = require('maboii');
 const amiiboUtils = require('./amiibo/utils');
 const db = dbManager.load();
 
-const keys = amiiboKey.load('./keys.bin');
+const keys = maboii.loadMasterKeys([...fs.readFileSync('./keys.bin')]);
 
 if (keys == null) {
     console.error('Failed to load keys.bin');
@@ -93,7 +93,7 @@ app.post('/api/bins', async (req, res) => {
     let raw = req.body.raw;
     let result = undefined;
     try {
-        let tmp = amiibo.unpack(keys, raw);
+        let tmp = maboii.unpack(keys, raw);
         if (tmp.result) {
             result = tmp.unpacked;
         }
@@ -106,13 +106,13 @@ app.post('/api/bins', async (req, res) => {
         return;
     }
 
-    let characterId = amiiboUtils.getCharacterId(result);
+    let characterId = maboii.plainDataUtils.getCharacterId(result);
     let characterName = amiiboUtils.getCharacterName(characterId);
-    let gameSeriesId = amiiboUtils.getGameSeriesId(result);
+    let gameSeriesId = maboii.plainDataUtils.getGameSeriesId(result);
     let gameSeriesName = amiiboUtils.getGameSeriesName(gameSeriesId);
-    let amiiboId = amiiboUtils.getAmiiboId(result);
+    let amiiboId = maboii.plainDataUtils.getAmiiboId(result);
     let amiiboName = amiiboUtils.getAmiiboName(amiiboId);
-    let name = amiiboUtils.getNickName(result);
+    let name = maboii.plainDataUtils.getNickName(result);
 
     let bin = {
         raw,
