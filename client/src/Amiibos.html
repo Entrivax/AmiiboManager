@@ -2,15 +2,8 @@
     <section class="au-animate mt-4">
         <h2>Amiibos</h2>
         <div class="mt-4">
-            <div class="input-group">
-                <div class="custom-file">
-                    <input files.bind="inputAmiiboFile" type="file" class="custom-file-input" id="inputAmiiboFile" aria-describedby="inputAmiiboFileButton">
-                    <label class="custom-file-label" for="inputAmiiboFile">Choose file</label>
-                </div>
-                <div class="input-group-append">
-                    <button click.delegate="uploadAmiibo()" class="btn btn-outline-secondary" type="button" id="inputAmiiboFileButton">Upload</button>
-                </div>
-            </div>
+            <button click.delegate="uploadAmiibo()" class="btn btn-outline-primary" type="button">Upload</button>
+            <button click.delegate="dumpAmiibo()" class="btn btn-outline-primary" type="button">Dump</button>
         </div>
         <div class="row">
             <div repeat.for="amiibo of amiibos" class="pt-4 col-sm-6 col-lg-4">
@@ -19,6 +12,7 @@
                       <h5 class="card-title">${amiibo.name}</h5>
                       <p class="card-text">${amiibo.amiiboName}</p>
                       <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="downloadAmiibo(amiibo)">Download</button>
+                      <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="restoreAmiibo(amiibo)">Restore</button>
                       <button type="button" class="btn btn-outline-danger btn-sm" click.delegate="deleteAmiibo(amiibo)">Delete</button>
                     </div>
                 </div>

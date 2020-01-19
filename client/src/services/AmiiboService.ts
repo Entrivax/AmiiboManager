@@ -1,34 +1,43 @@
-import { HttpClient, json } from 'aurelia-fetch-client';
-import { autoinject } from 'aurelia-framework';
+import { HttpClient, json } from 'aurelia-fetch-client'
+import { autoinject } from 'aurelia-framework'
 
 @autoinject()
 export class AmiiboService {
-    constructor(private httpClient: HttpClient) { }
+    constructor (private httpClient: HttpClient) { }
 
-    getAmiibos(): Promise<Response> {
+    getAmiibos (): Promise<Response> {
         return this.httpClient.fetch('./api/bins', {
             method: 'get'
-        });
+        })
     }
 
-    getAmiibo(id: string): Promise<Response> {
+    getAmiibo (id: string): Promise<Response> {
         return this.httpClient.fetch('./api/bins/' + encodeURIComponent(id), {
             method: 'get'
-        });
+        })
     }
 
-    deleteAmiibo(id: string): Promise<Response> {
+    patchAmiibo (id: string, uid: number[]): Promise<Response> {
+        return this.httpClient.fetch('./api/bins/' + encodeURIComponent(id), {
+            method: 'PATCH',
+            body: json({
+                uid
+            })
+        })
+    }
+
+    deleteAmiibo (id: string): Promise<Response> {
         return this.httpClient.fetch('./api/bins/' + encodeURIComponent(id), {
             method: 'delete'
-        });
+        })
     }
 
-    postAmiibo(data: number[]): Promise<Response> {
+    postAmiibo (data: number[]): Promise<Response> {
         return this.httpClient.fetch('./api/bins', {
             method: 'post',
             body: json({
                 raw: data
             })
-        });
+        })
     }
 }

@@ -83,6 +83,31 @@ app.delete('/api/bins/:id', (req, res) => {
     res.json(db.deleteBin(session.login, req.params.id));
 });
 
+app.patch('/api/bins/:id', async (req, res) => {
+    let session = db.getSession(req.headers.authorization);
+    if (!session) {
+        res.json(null);
+        return;
+    }
+
+    if (!Array.isArray(req.body.uid) || (req.body.uid.length !== 7)) {
+        res.status(400)
+            .json({ message: 'INVALID_UID' })
+        return
+    }
+    for (let i = 0; i < req.body.uid.length; i++) {
+        if (typeof req.body.uid[i] !== 'number') {
+            res.status(400)
+                .json({ message: 'INVALID_UID' })
+            return
+        }
+    }
+
+    let amiiboData = db.getBin(session.login, req.params.id)
+    let patchedAmiibo = patchAmiibo(amiiboData.raw, req.body.uid)
+    res.json({ data: patchedAmiibo })
+})
+
 app.post('/api/bins', async (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
@@ -142,3 +167,45 @@ app.use('/', express.static('../client/dist'));
 app.listen(3000, function () {
     console.log('App listening on port 3000!')
 })
+
+function patchAmiibo(amiiboData, uid) {
+    let tmp = maboii.unpack(keys, amiiboData);
+    if (!tmp.result) {
+        throw new Error('UNABLE_TO_UNPACK_DATA')
+    }
+    let result = tmp.unpacked;
+
+    let longUid = null
+    if (uid.length === 9) {
+        longUid = uid
+    } else if (uid.length === 7) {
+        let BCC0 = 0x88 ^ uid[0] ^ uid[1] ^ uid[2]
+        let BCC1 = uid[3] ^ uid[4] ^ uid[5] ^ uid[6]
+        longUid = [ uid[0], uid[1], uid[2], BCC0, uid[3], uid[4], uid[5], uid[6], BCC1 ]
+    } else {
+        throw new Error('INVALID_UID')
+    }
+    let password = generatePasswordFromUid(longUid)
+
+    result[0] = longUid[8]
+    result[2] = result[3] = 0
+    for (let i = 0; i < 8; i++)
+        result[0x1D4 + i] = longUid[i]
+    result[0x208] = result[0x209] = result[0x20A] = 0
+    for (let i = 0; i < 4; i++)
+        result[0x214 + i] = password[i]
+    result[0x218] = result[0x219] = 0x80
+
+    console.log(longUid, password, result)
+
+    return maboii.pack(keys, result)
+}
+
+function generatePasswordFromUid(uid) {
+    return [
+        0xAA ^ uid[1] ^ uid[4],
+        0x55 ^ uid[2] ^ uid[5],
+        0xAA ^ uid[4] ^ uid[6],
+        0x55 ^ uid[5] ^ uid[7]
+    ]
+}

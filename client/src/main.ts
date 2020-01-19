@@ -7,7 +7,16 @@ import {PLATFORM} from 'aurelia-pal';
 export function configure(aurelia: Aurelia) {
   aurelia.use
     .standardConfiguration()
-    .feature(PLATFORM.moduleName('resources/index'));
+    .feature(PLATFORM.moduleName('resources/index'))
+    .plugin(PLATFORM.moduleName('aurelia-dialog'), config => {
+        config.useDefaults()
+        config.useCSS('')
+        config.settings.position = (modalContainer: Element) => {
+            modalContainer.classList.add('modal-open')
+            modalContainer.firstElementChild.classList.add('modal');
+            (modalContainer.firstElementChild as HTMLElement).style.display = 'block'
+        }
+    });
 
   aurelia.use.developmentLogging(environment.debug ? 'debug' : 'warn');
 

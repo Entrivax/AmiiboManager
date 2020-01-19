@@ -1,51 +1,62 @@
-import { AmiiboService } from './services/AmiiboService';
-import { autoinject } from "aurelia-framework";
-import { saveAs } from 'file-saver';
+import { AmiiboService } from './services/AmiiboService'
+import { autoinject } from 'aurelia-framework'
+import { DialogService } from 'aurelia-dialog'
+import { saveAs } from 'file-saver'
+import { FlashDialog } from 'dialogs/FlashDialog'
+import { AmiiboUploadDialog } from 'dialogs/AmiiboUploadDialog'
+import { DumpDialog } from 'dialogs/DumpDialog'
 
 @autoinject()
 export class Amiibos {
-    public amiibos: any[];
-    public inputAmiiboFile: FileList;
+    public amiibos: any[]
 
-    constructor(private amiiboService: AmiiboService) {}
+    constructor (private amiiboService: AmiiboService, private dialogService: DialogService) { }
 
-    activate(params, routeConfig, navigationInstruction) {
-        this.load();
+    activate (params, routeConfig, navigationInstruction) {
+        this.load()
     }
 
-    private load() {
+    private load () {
         this.amiiboService.getAmiibos().then((response) => {
             response.json().then((amiibos) => {
-                this.amiibos = amiibos;
+                this.amiibos = amiibos
             })
         })
     }
 
-    uploadAmiibo() {
-        if (this.inputAmiiboFile != null && this.inputAmiiboFile.item(0)) {
-            let file = this.inputAmiiboFile.item(0);
-            let reader = new FileReader();
-            reader.onload = () => {
-                let result = <ArrayBuffer>reader.result;
-                let array = new Uint8Array(result);
-                let raw = Array.from(array);
-                this.amiiboService.postAmiibo(raw).then(() => this.load());
-            }
-            reader.readAsArrayBuffer(file);
-        }
+    uploadAmiibo () {
+        this.dialogService.open({ viewModel: AmiiboUploadDialog, lock: false })
+            .whenClosed(result => {
+                if (!result.wasCancelled) {
+                    this.load()
+                }
+            })
     }
 
-    downloadAmiibo(amiibo: any) {
+    dumpAmiibo () {
+        this.dialogService.open({ viewModel: DumpDialog, lock: false })
+            .whenClosed(result => {
+                if (!result.wasCancelled) {
+                    this.load()
+                }
+            })
+    }
+
+    downloadAmiibo (amiibo: any) {
         this.amiiboService.getAmiibo(amiibo.id)
             .then(response => response.json())
             .then(amiibo => {
                 let blob = new Blob([new Uint8Array(amiibo.raw)], { type: "octet/stream" })
-                saveAs(blob, [amiibo.characterName, amiibo.name].join(' - ') + '.bin', true);
+                saveAs(blob, [amiibo.characterName, amiibo.name].join(' - ') + '.bin', true)
             })
     }
 
-    deleteAmiibo(amiibo: any) {
+    restoreAmiibo (amiibo: any) {
+        this.dialogService.open({ viewModel: FlashDialog, model: { restore: true, id: amiibo.id }, lock: false })
+    }
+
+    deleteAmiibo (amiibo: any) {
         this.amiiboService.deleteAmiibo(amiibo.id)
-            .then(() => this.load());
+            .then(() => this.load())
     }
 }

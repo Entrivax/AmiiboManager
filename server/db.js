@@ -32,13 +32,17 @@
 
         getSession(sessionId) {
             let currentDate = new Date().getTime() - 1000 * 60 * 60 * 5;
-            for (let sessionId in this.db.sessions) {
-                let sessionDate = this.db.sessions[sessionId].date.getTime();
+            for (let session in this.db.sessions) {
+                let sessionDate = this.db.sessions[session].date.getTime();
                 if (sessionDate < currentDate) {
-                    delete this.db.sessions[sessionId];
+                    delete this.db.sessions[session];
                 }
             }
-            return this.db.sessions[sessionId];
+            let session = this.db.sessions[sessionId]
+            if (session) {
+                session.date = new Date()
+            }
+            return session;
         }
 
         createSession(sessionId, login) {

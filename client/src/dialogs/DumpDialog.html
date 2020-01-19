@@ -1,0 +1,36 @@
+<template>
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dump Amiibo</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" click.delegate="controller.cancel()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div if.bind="!waitingForAmiibo && !uploadingAmiibo && !readingAmiibo">
+                    <div class="form-group">
+                        <label for="amiibombuino-address">Amiibomb-uino address</label>
+                        <input type="text" class="form-control" id="amiibombuino-address" value.bind="amiibombuinoAddress" placeholder="http://amiibomb.local/">
+                    </div>
+                </div>
+                <div if.bind="waitingForAmiibo">
+                    <div class="text-center mb-2">Waiting for Amiibo...</div>
+                    <div class="spinner">
+                        <div class="double-bounce1"></div>
+                        <div class="double-bounce2"></div>
+                    </div>
+                </div>
+                <div if.bind="uploadingAmiibo || readingAmiibo">
+                    <div if.bind="readingAmiibo" class="text-center mb-2">Reading Amiibo, please wait...</div>
+                    <div if.bind="uploadingAmiibo" class="text-center mb-2">Uploading Amiibo...</div>
+                    <div class="spinner-plane"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" click.delegate="controller.cancel()">Close</button>
+                <button type="button" class="btn btn-primary" disabled.bind="waitingForAmiibo || patchingAmiibo" click.delegate="dump()">Dump</button>
+            </div>
+        </div>
+    </div>
+</template>
