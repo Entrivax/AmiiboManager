@@ -34,10 +34,12 @@ export class FlashDialog {
                 this.waitingForAmiibo = false
                 this.patchingAmiibo = true
                 let patchedAmiibo = await this.patchAmiibo()
-                let restoreResult = await this.amiibombService.restoreAmiibo(this.amiibombuinoAddress?.length ?? 0 >= 1 ? this.amiibombuinoAddress : 'http://amiibomb.local/', patchedAmiibo)
+                let flashResult = this.restore ?
+                    await this.amiibombService.restoreAmiibo(this.amiibombuinoAddress?.length ?? 0 >= 1 ? this.amiibombuinoAddress : 'http://amiibomb.local/', patchedAmiibo) :
+                    await this.amiibombService.writeAmiibo(this.amiibombuinoAddress?.length ?? 0 >= 1 ? this.amiibombuinoAddress : 'http://amiibomb.local/', patchedAmiibo)
                 this.waitingForAmiibo = false
                 this.patchingAmiibo = false
-                if (restoreResult.status === 200) {
+                if (flashResult.status === 200) {
                     this.controller.ok()
                     try {
                         await this.amiibombService.halt(this.amiibombuinoAddress?.length ?? 0 >= 1 ? this.amiibombuinoAddress : 'http://amiibomb.local/')
@@ -45,7 +47,7 @@ export class FlashDialog {
                         console.warn(err)
                     }
                 } else {
-                    console.error(restoreResult)
+                    console.error(flashResult)
                 }
             } else {
                 await new Promise(resolve => setTimeout(() => resolve(), 50))

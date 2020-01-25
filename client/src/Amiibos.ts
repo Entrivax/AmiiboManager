@@ -55,6 +55,10 @@ export class Amiibos {
         this.dialogService.open({ viewModel: FlashDialog, model: { restore: true, id: amiibo.id }, lock: false })
     }
 
+    writeAmiibo (amiibo: any) {
+        this.dialogService.open({ viewModel: FlashDialog, model: { restore: false, id: amiibo.id }, lock: true })
+    }
+
     deleteAmiibo (amiibo: any) {
         this.amiiboService.deleteAmiibo(amiibo.id)
             .then(() => this.load())

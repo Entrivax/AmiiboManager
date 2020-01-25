@@ -29,6 +29,15 @@ export class AmiibombService {
         })
     }
 
+    writeAmiibo (amiibombAddress: string, amiiboData: number[]): Promise<Response> {
+        let data = new FormData()
+        data.append('name', new Blob([new Uint8Array(amiiboData)]))
+        return this.httpClient.fetch((amiibombAddress.endsWith('/') ? amiibombAddress : `${amiibombAddress}/`) + 'WRITE_AMIIBO', {
+            method: 'post',
+            body: data
+        })
+    }
+
     restoreAmiibo (amiibombAddress: string, amiiboData: number[]): Promise<Response> {
         let data = new FormData()
         data.append('name', new Blob([new Uint8Array(amiiboData)]))
