@@ -54,17 +54,23 @@
             return session;
         }
 
+        deleteSession(sessionId) {
+            let session = this.db.sessions[sessionId]
+            if (session) {
+                delete this.db.sessions[sessionId]
+            }
+            return session
+        }
+
         getBins(login) {
             return (this.db.bins[login] || []).map(bin => { return {
                 uid: bin.uid,
                 owner: bin.owner,
                 name: bin.name,
                 characterId: bin.characterId,
-                characterName: bin.characterName,
                 gameSeriesId: bin.gameSeriesId,
-                gameSeriesName: bin.gameSeriesName,
                 amiiboId: bin.amiiboId,
-                amiiboName: bin.amiiboName,
+                date: bin.date,
                 id: bin.id,
             }}) || [];
         }
@@ -91,11 +97,9 @@
                 owner: amiiboData.owner,
                 name: amiiboData.name,
                 characterId: amiiboData.characterId,
-                characterName: amiiboData.characterName,
                 gameSeriesId: amiiboData.gameSeriesId,
-                gameSeriesName: amiiboData.gameSeriesName,
                 amiiboId: amiiboData.amiiboId,
-                amiiboName: amiiboData.amiiboName,
+                date: new Date().toISOString(),
                 id: uuidv4(),
             }
             this.db.bins[login] = this.db.bins[login] || [];

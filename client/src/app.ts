@@ -1,4 +1,3 @@
-import { SessionService } from 'services/SessionService';
 import { HttpClient } from 'aurelia-fetch-client';
 import { PLATFORM } from 'aurelia-pal';
 import { Router, RouterConfiguration } from 'aurelia-router';
@@ -9,9 +8,9 @@ import { autoinject } from 'aurelia-framework';
 export class App {
     public router: Router;
 
-    constructor(httpClient: HttpClient, sessionService: SessionService) {
+    constructor(httpClient: HttpClient, sessionInterceptor: SessionInterceptor) {
         httpClient.configure(config => {
-            config.withInterceptor(new SessionInterceptor(sessionService));
+            config.withInterceptor(sessionInterceptor);
         });
     }
 

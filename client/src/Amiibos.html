@@ -9,12 +9,15 @@
             <div repeat.for="amiibo of amiibos" class="pt-4 col-sm-6 col-lg-4">
                 <div class="card">
                     <div class="card-body">
-                      <h5 class="card-title">${amiibo.name}</h5>
-                      <p class="card-text">${amiibo.amiiboName}</p>
-                      <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="downloadAmiibo(amiibo)">Download</button>
-                      <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="restoreAmiibo(amiibo)">Restore</button>
-                      <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="writeAmiibo(amiibo)">Flash blank</button>
-                      <button type="button" class="btn btn-outline-danger btn-sm" click.delegate="deleteAmiibo(amiibo)">Delete</button>
+                        <h5 class="card-title">${amiibo.name}</h5>
+                        <p class="card-text">
+                            <div>Amiibo: ${amiibo.amiiboName}</div>
+                            <div>Upload date: ${amiibo.date | date}</div>
+                        </p>
+                        <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="downloadAmiibo(amiibo)">Download</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="restoreAmiibo(amiibo)">Restore</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" click.delegate="writeAmiibo(amiibo)">Flash blank</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" click.delegate="deleteAmiibo(amiibo)">Delete</button>
                     </div>
                 </div>
             </div>

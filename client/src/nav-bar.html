@@ -14,6 +14,9 @@
                 <li repeat.for="row of router.navigation" class="nav-item ${row.isActive ? 'active' : ''}">
                     <a class="nav-link" href.bind="row.href">${row.title}</a>
                 </li>
+                <li>
+                    <div class="nav-link" click.delegate="logout()">Logout</div>
+                </li>
             </ul>
         </div>
     </nav>

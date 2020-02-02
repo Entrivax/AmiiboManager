@@ -43,6 +43,22 @@ app.post('/api/login', async (req, res) => {
     res.json({ sessionId: session.sessionId });
 })
 
+app.delete('/api/logout', async (req, res) => {
+    let session = db.getSession(req.headers.authorization);
+    if (!session) {
+        res.status(401);
+        res.json(null);
+        return;
+    }
+    session = db.deleteSession(session.sessionId)
+
+    if (session) {
+        res.json({ sessionId: session.sessionId });
+    }
+    res.status(404);
+    res.json(null);
+})
+
 app.post('/api/register', async (req, res) => {
     let user = await db.addUser(req.body.login, req.body.password);
     if (user == null) {
@@ -56,26 +72,59 @@ app.post('/api/register', async (req, res) => {
 app.get('/api/bins', (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
+        res.status(401);
         res.json(null);
         return;
     }
 
-    res.json(db.getBins(session.login));
+    let bins = db.getBins(session.login)
+    bins.forEach((bin) => {
+        if (bin) {
+            let { characterName, gameSeriesName, amiiboName } = getDataFromAmiibo(bin)
+            bin.characterName = characterName
+            bin.gameSeriesName = gameSeriesName
+            bin.amiiboName = amiiboName
+        }
+    })
+
+    res.json(bins);
 });
 
 app.get('/api/bins/:id', (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
+        res.status(401);
         res.json(null);
         return;
     }
 
-    res.json(db.getBin(session.login, req.params.id));
+    let amiibo = db.getBin(session.login, req.params.id)
+    if (amiibo) {
+        let { characterName, gameSeriesName, amiiboName } = getDataFromAmiibo(amiibo)
+        amiibo.characterName = characterName
+        amiibo.gameSeriesName = gameSeriesName
+        amiibo.amiiboName = amiiboName
+    }
+
+    res.json(amiibo);
 });
+
+/**
+ * 
+ * @param {{ characterId: string, gameSeriesId: string, amiiboId: string }} amiiboData 
+ */
+function getDataFromAmiibo (amiiboData) {
+    return {
+        characterName: amiiboUtils.getCharacterName(amiiboData.characterId),
+        gameSeriesName: amiiboUtils.getGameSeriesName(amiiboData.gameSeriesId),
+        amiiboName: amiiboUtils.getAmiiboName(amiiboData.amiiboId)
+    }
+}
 
 app.delete('/api/bins/:id', (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
+        res.status(401);
         res.json(null);
         return;
     }
@@ -86,6 +135,7 @@ app.delete('/api/bins/:id', (req, res) => {
 app.patch('/api/bins/:id', async (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
+        res.status(401);
         res.json(null);
         return;
     }
@@ -111,6 +161,7 @@ app.patch('/api/bins/:id', async (req, res) => {
 app.post('/api/bins', async (req, res) => {
     let session = db.getSession(req.headers.authorization);
     if (!session) {
+        res.status(401);
         res.json(null);
         return;
     }
@@ -132,32 +183,23 @@ app.post('/api/bins', async (req, res) => {
     }
 
     let characterId = maboii.plainDataUtils.getCharacterId(result);
-    let characterName = amiiboUtils.getCharacterName(characterId);
     let gameSeriesId = maboii.plainDataUtils.getGameSeriesId(result);
-    let gameSeriesName = amiiboUtils.getGameSeriesName(gameSeriesId);
     let amiiboId = maboii.plainDataUtils.getAmiiboId(result);
-    let amiiboName = amiiboUtils.getAmiiboName(amiiboId);
     let name = maboii.plainDataUtils.getNickName(result);
 
     let bin = {
         raw,
         characterId,
-        characterName,
         gameSeriesId,
-        gameSeriesName,
         amiiboId,
-        amiiboName,
         name,
     };
     res.json(bin);
     db.addBin(session.login, bin);
     console.log('Added', {
         characterId,
-        characterName,
         gameSeriesId,
-        gameSeriesName,
         amiiboId,
-        amiiboName,
         name,
     })
 });
